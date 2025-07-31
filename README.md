@@ -1,16 +1,14 @@
 # driver_tablet_demo
 
-A new Flutter project.
+A Flutter iPad/tablet demo app for offline-first field logistics, built as a learning and architecture lab. Core functionalities include:
 
-## Getting Started
+* Responsive, large-screen tablet UI for field/logistics use cases
+* Interactive maps with cached tiles using flutter_map and offline support
+* Background location tracking, background services, and sync on connectivity change
+* Online/offline data syncing for routes, stops, and forms
+* Persistent navigation banners and notifications to bring users back to the app
+* Turn-by-turn voice navigation using Text-to-Speech (TTS)
+* Push and local notifications for alerts and workflow updates
+* Integrated Syncfusion calendar for shift and route scheduling
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Designed to help you explore, test, and showcase modern Flutter solutions for enterprise field operations or delivery apps.
