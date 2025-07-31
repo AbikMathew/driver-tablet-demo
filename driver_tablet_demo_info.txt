@@ -1,0 +1,157 @@
+# Flutter iPad Demo Project: Feature & Tech Summary
+
+I’m using this project as an opportunity to explore and learn various unfamiliar packages—like Flutter Map, layering techniques, Geolocator and related libraries, TTS, offline syncing, Fusion Calendar, background services, and more. So please guide me in a way that helps me build a highly scalable solution while following the best coding standards.
+
+
+1. Feature list  
+2. Functional requirements  
+3. Recommended packages  
+4. Key implementation notes  
+
+## 1. Core Features
+
+1. **Authentication & Session**  
+   -  Phone + OTP login (Trucker)  
+   -  Persistent JWT session (stay signed in)  
+   -  Resend OTP & error handling  
+   -  Logout and session clear  
+
+2. **Responsive iPad UI**  
+   -  Bottom navigation tabs: Dashboard, Map, Jobs, Settings  
+   -  Support portrait/landscape on 10"–13" iPads  
+   -  Reusable component library (e.g., custom buttons, cards)  
+
+3. **Calendar (Availability & Scheduling)**  
+   -  Syncfusion calendar widget: Month / Week / Day views  
+   -  View availability (week/day) and edit (toggle days, set hours)  
+   -  Block past-date edits; gray out past cells + toast on tap  
+   -  Recurring weekly default vs. daily overrides  
+   -  Pull/persist schedule data via REST API  
+
+4. **Map & Routing**  
+   -  `flutter_map` with OpenStreetMap (or AWS tiles)  
+   -  Offline tile caching (48 h) via `flutter_map_tile_caching` or built-in cache provider  
+   -  Draw polylines for the active route; number stops; color-code status  
+   -  Show current location marker; “recenter” button  
+   -  All-stops view (“All Stops”) and per-stop navigation (“Routing”)  
+
+5. **Offline Support & Sync**  
+   -  Detect connectivity via `connectivity_plus`  
+   -  Cache forms (Hive + `flutter_cache_manager`) and route JSON for offline use  
+   -  Auto-sync pending forms on reconnect  
+   -  Auto-download and cache “today’s route + stops” at login  
+
+6. **Persistent Notifications**  
+   -  In-app banner for active route navigation (tappable → deep link)  
+   -  Local & push notifications via `flutter_local_notifications` + FCM  
+   -  Ongoing (“ongoing: true”) and actionable notifications  
+
+7. **Text-to-Speech (TTS)**  
+   -  Turn-by-turn voice prompts before each turn  
+   -  “Read Notes” button per stop to speak stop instructions  
+   -  Offline TTS support via `flutter_tts`  
+
+## 2. Functional Requirements & Acceptance Criteria
+
+### Authentication
+- OTP login: phone field (10-digit US), “Send OTP” → `/auth/request-otp`, verify at `/auth/verify-otp`  
+- Resend OTP cooldown (15–30 s), limit retries  
+- JWT stored in secure storage, auto-login if valid  
+- Logout clears storage and redirects to login  
+
+### UI & Navigation
+- Bottom nav preserves each tab’s navigation stack  
+- Highlight the active tab  
+- Layout adapts to iPad breakpoints (use `LayoutBuilder`, `MediaQuery`)  
+
+### Calendar
+- Allowed views: `.month`, `.week`, `.day`  
+- Week view: highlight working days, navigate weeks left/right, default to current week  
+- Tapping a future date toggles availability → update via `/api/schedule/week/update`  
+- Block past-date taps: gray out cells, show toast “Cannot edit past dates”  
+- Day view: show hourly blocks; tap & drag to set start/end times → `/api/schedule/day/update`  
+- Recurring defaults: apply on/off pattern for Mon–Fri → `/api/schedule/defaults`  
+
+### Maps & Routing
+- `flutter_map` configuration:
+  ```dart
+  TileLayer(
+    urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    tileProvider: FMTC.instance('tileCache').getTileProvider(),
+  )
+  ```
+- PolylineLayer for route: color = blue, width = 4  
+- CurrentLocationLayer (from `flutter_map_location_marker`) with `FollowOnLocationUpdate.always`  
+- All-Stops view: numbered markers, color codes per status  
+- Routing view: draw polyline from current location to selected stop; show ETA  
+
+### Offline Caching & Sync
+- Connectivity detection:  
+  ```dart
+  Connectivity().onConnectivityChanged.listen((status) {
+    if (status != ConnectivityResult.none) syncPendingForms();
+  });
+  ```
+- Form caching: Hive box “forms” with timestamp & `pendingSync` flag  
+- Route caching: store today’s route JSON in Hive/`flutter_cache_manager` on login  
+- Map tile caching with FMTC or built-in cache (expire after 48 h)  
+
+### Persistent Notification
+- Use `flutter_local_notifications` to show an ongoing notification:
+  ```dart
+  AndroidNotificationDetails(..., ongoing: true, ...);
+  ```
+- Payload deep link `myapp://route/active` → handle in `onSelectNotification`  
+
+### Text-to-Speech
+- Initialize:
+  ```dart
+  final tts = FlutterTts();
+  await tts.setLanguage('en-US');
+  ```
+- Speak:
+  ```dart
+  tts.speak("Turn right in 200 meters");
+  ```
+- “Read Notes” button per stop: `tts.speak(stop.note)`  
+
+## 3. Recommended Packages
+
+- Core Flutter & UI  
+  `flutter`, `cupertino_icons`, `go_router`  
+- iPad Responsiveness  
+  `layout_builder`, `media_query` (built-in)  
+- Calendar  
+  `syncfusion_flutter_calendar`  
+- Maps & LBS  
+  `flutter_map`, `flutter_map_tile_caching`, `flutter_map_location_marker`, `tile_overlays`, `geolocator`  
+- Offline Storage & Sync  
+  `hive`, `flutter_cache_manager`, `connectivity_plus`  
+- Notifications  
+  `flutter_local_notifications`, `firebase_messaging`, `firebase_core`  
+- TTS  
+  `flutter_tts`  
+- Networking  
+  `dio`  
+
+## 4. Key Considerations
+
+- **iPad UI/UX:**  
+  -  Touch targets ≥44 pt, adapt fonts & spacing  
+  -  Test both orientations & split-screen  
+
+- **Background Services:**  
+  -  iOS: request “Always” location permission before background logging  
+  -  Respect battery impact: use significant-change location updates when idle  
+
+- **Offline-First Flow:**  
+  -  Treat local cache as source-of-truth; sync to remote when online  
+  -  Provide visual cues for offline mode and sync status  
+
+- **Error Handling & Feedback:**  
+  -  Global toast/snackbar context for success/failure messages  
+  -  Graceful fallback for missing permissions or offline scenarios  
+
+Use this as the **single source of truth** when scaffolding your Flutter demo project. It covers all driver-app features, required behaviors, and the ecosystem of packages you’ll explore.
+
+[1] https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/83535416/7401f8d8-4fc0-4d37-9363-08efef9bd6cb/Ken-Ace-Grease-Trucker-7_2025-Storyboard-V3-Dev.xlsx
