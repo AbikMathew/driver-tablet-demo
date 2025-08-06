@@ -12,7 +12,7 @@ import '../../shared/widgets/main_navigation.dart';
 // Router provider
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
-    initialLocation: '/login',
+    initialLocation: '/dashboard',
     routes: [
       // Authentication Routes
       GoRoute(
